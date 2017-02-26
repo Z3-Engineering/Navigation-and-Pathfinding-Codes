@@ -29,11 +29,11 @@ void loop() {
  // cout << "[""]" << "\n";
 
 // updateSonar();
-reset_path();
-reset_lists();
-update_grid(0,0,18,0);
- FindPath(0,0,18,0);
-      show_Grid();
+reset_path(); //first you reset path
+reset_lists(); //then reset list
+update_grid(0,0,18,0); //then update grid for obstacles 
+ FindPath(0,0,18,0); // then find the path based on updated grid
+      show_Grid(); //then show the vidualized grid
 
 delay(5000);
 }
@@ -51,7 +51,7 @@ struct node
     int gcost;
     int hcost;
     bool walkable;
-    bool in_path;
+    bool in_path; //added in path for visual shit
     struct node* parent;
   };
 
@@ -246,6 +246,8 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
   }
 } 
 
+
+// this is where obstacle detection and avoidance starts
 #include <NewPing.h>
 double cm[1]; //sensed distance of sonar sensor : 2 represents array(2 sonar sensors)
 int trigger[1] = {40}; //trigger pins assignment  (sends)   
@@ -256,6 +258,7 @@ NewPing sonar[1] =
   NewPing(trigger[0], echo[0], 500), //500 represents type of sensor
 };
 
+//copied from robot code
 void updateSonar() {
   for (int i = 0; i < 1; i++) {
     //cm[i]=sonar[i].ping_cm();
@@ -264,19 +267,21 @@ void updateSonar() {
     delay(50);
 
     Serial.println(cm[i]);
-
-
-
   }
 }
+
+//dtermines if the locations detected by sonar are occupied or not
 void update_grid(int x, int y, int target_x,int target_y){
   updateSonar();
+  //distance of object detected
   float sonarleft = cm[0];
 
-
+//adjust 150 to what you want, 150cm is what i consider accurate
   if(sonarleft <= 150 && sonarleft != 0){
     int unoccupied = sonarleft/25;
+    //adjust 25 to what you want. i wanted each box in the grid to be 25x25cm. I will increase this to match the demensions of the robot
     
+    //this is to remove obsticales that were there before, but were removed. marks true if no obstacle
     for (int u = 0; u <= unoccupied; u++){
       grid[x + u][y].walkable = true;
     }
@@ -284,6 +289,7 @@ void update_grid(int x, int y, int target_x,int target_y){
     grid[x + unoccupied + 1][y].walkable = false;
 
   }
+  //if there is no obsticale, mark the boxes as unoccupied.....so since 150cm is our range, range/nodesize = # of nodes 
   else{
     int unoccupied = 150/25;
 
@@ -295,7 +301,7 @@ void update_grid(int x, int y, int target_x,int target_y){
         
 
 }
-
+//resets in_path to false for all locations 
 void reset_path() {
   for(int i = 0; i <20; i++){
     for(int j = 0; j <20; j++){  
@@ -303,7 +309,7 @@ void reset_path() {
       }
     }
 }
-
+//erases open and closed list
 void reset_lists(){
   open.clear();
   closed.clear();
