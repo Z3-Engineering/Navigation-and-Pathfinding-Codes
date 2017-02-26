@@ -60,8 +60,8 @@ int c = abs(results[3])-1;
 
  float motors[3];
  motors[a]= (results[1]/(abs(results[1]))) * Motor_1;
- motors[b]= Motor_2;
- motors[c]= Motor_Comp;
+ motors[b]= (results[1]/(abs(results[1]))) *Motor_2;
+ motors[c]= (results[1]/(abs(results[1]))) *Motor_Comp;
 
 //Serial.println(results[0]);
 //Serial.println(results[1]);
