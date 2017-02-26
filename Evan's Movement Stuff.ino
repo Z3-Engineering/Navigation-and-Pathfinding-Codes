@@ -37,6 +37,47 @@ void loop(){
   translatePolar(100,100);
 }
 
+
+
+
+#include <NewPing.h>
+double cm[1]; //sensed distance of sonar sensor : 2 represents array(2 sonar sensors)
+int trigger[1] = {40}; //trigger pins assignment  (sends)   
+int echo[1] = {41}; //echo pins (receives)
+
+NewPing sonar[1] =
+{
+  NewPing(trigger[0], echo[0], 500), //500 represents type of sensor
+};
+
+//copied from robot code
+void updateSonar() {
+  for (int i = 0; i < 1; i++) {
+    //cm[i]=sonar[i].ping_cm();
+    unsigned int uS = sonar[i].ping();
+    cm[i] = sonar[i].convert_cm(uS);
+    delay(50);
+
+    Serial.println(cm[i]);
+  }
+}
+
+
+
+
+
+
+float velocity_calib(){
+	double start_pos = cm[0];
+	timerReset();
+	wheel_speeds(40,0);
+	while(cm[0] >20){
+		updateSonar();
+		timerReading();
+	}
+	return start_pos/(timerReading/1000);
+
+}
 void complexMove(int goalX, int goalY, float orientation){ //Robot winds up in a specified grid, facing a specified direction, measured in grid squares and degrees.  
   translateCart(goalX, goalY); //Robot moves to a specified location
   float dTheta = orientation - Compass;
@@ -128,8 +169,8 @@ void wheel_speeds(float tot_spd, float ang){
 
  float motors[3];
  motors[a]= (results[1]/(abs(results[1]))) * Motor_1;
- motors[b]= Motor_2;
- motors[c]= Motor_Comp;
+ motors[b]= (results[2]/(abs(results[2])))*Motor_2;
+ motors[c]= (results[3]/(abs(results[3])))*Motor_Comp;
 }
 
 void Relative_ang(float *ptr, float ang){
