@@ -1,5 +1,3 @@
-//check out the pathfinding.cpp code in the repo for all comments and explanation. Im too lazy to transfer it over.
-
 #include <StandardCplusplus.h>
 #include <system_configuration.h>
 #include <unwind-cxx.h>
@@ -15,9 +13,10 @@ using namespace std;
 void setup() {
   // put your setup code here, to run once:
    Serial.begin(57600);
-   gridInit();
-  FindPath(0,0,10,10);
+gridInit();
+//FindPath(0,0,18,0);
 
+ //show_Grid();
 }
 
 void loop() {
@@ -27,6 +26,14 @@ void loop() {
 //  FindPath(0,0,10,10);
  // cout << "[""]" << "\n";
 
+// updateSonar();
+reset_path();
+reset_lists();
+update_grid(0,0,18,0);
+ FindPath(0,0,18,0);
+      show_Grid();
+
+delay(5000);
 }
 
 
@@ -42,7 +49,7 @@ struct node
     int gcost;
     int hcost;
     bool walkable;
-
+    bool in_path;
     struct node* parent;
   };
 
@@ -68,7 +75,24 @@ void gridInit(){
 
 }
 
-//using structures to represent nodes for open and closed lists
+void show_Grid(){
+  for(int i = 0; i <20; i++){
+    for(int j = 0; j <20; j++){  
+      if(grid[j][i].walkable && !grid[j][i].in_path){
+        Serial.print("0 ");  
+      }
+      else if (grid[j][i].in_path)
+        Serial.print("X ");
+      else
+        Serial.print("1 ");
+      
+    }
+     Serial.println();
+  }
+
+}
+
+//using structures to represent nodes for openList and closed lists
 vector<struct node *> open; // nodes that need to be evaluated
 vector<struct node *> closed; //already been evaluated
 
@@ -130,8 +154,11 @@ void RetracePath(struct node *startNode, struct node *endNode){
   vector<struct node *> path;
   struct node *currentNode = endNode;
 
+
+
   // TODO WTF DO WE IF THERES NO PATH BRAH
   while(currentNode != startNode){
+      currentNode->in_path = true;
     path.push_back(currentNode);
     currentNode = currentNode->parent;
   Serial.print("[");
@@ -173,12 +200,16 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
   open.push_back(startNode);
   //cout << open[0]->posy << "\n";
 
+ 
+
   while(open.size() > 0 ){
     //cout << "[2]" << "\n";
+     
     struct node *currentNode = open[0];
     int index = 0;
 
     for (int i =1; i<open.size(); i++){
+      Serial.println("HIIHIHIHIHIHI");
       if(fcost(open[i]) < fcost(currentNode) || fcost(open[i]) == fcost(currentNode) && open[i]->hcost < currentNode->hcost){
         currentNode = open[i];
         index = i;
@@ -188,7 +219,7 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
     }
     open.erase(open.begin() + index);
     closed.push_back(currentNode);
-    printnode(currentNode);
+   // printnode(currentNode);
     if(currentNode == targetNode){
       RetracePath(startNode, targetNode);
       return;
@@ -213,5 +244,64 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
   }
 } 
 
+#include <NewPing.h>
+double cm[1]; //sensed distance of sonar sensor : 2 represents array(2 sonar sensors)
+int trigger[1] = {40}; //trigger pins assignment  (sends)   
+int echo[1] = {41}; //echo pins (receives)
+
+NewPing sonar[1] =
+{
+  NewPing(trigger[0], echo[0], 500), //500 represents type of sensor
+};
+
+void updateSonar() {
+  for (int i = 0; i < 1; i++) {
+    //cm[i]=sonar[i].ping_cm();
+    unsigned int uS = sonar[i].ping();
+    cm[i] = sonar[i].convert_cm(uS);
+    delay(50);
+
+    Serial.println(cm[i]);
 
 
+
+  }
+}
+void update_grid(int x, int y, int target_x,int target_y){
+  updateSonar();
+  float sonarleft = cm[0];
+
+
+  if(sonarleft <= 150 && sonarleft != 0){
+    int unoccupied = sonarleft/25;
+    
+    for (int u = 0; u <= unoccupied; u++){
+      grid[x + u][y].walkable = true;
+    }
+    
+    grid[x + unoccupied + 1][y].walkable = false;
+
+  }
+  else{
+    int unoccupied = 150/25;
+
+      for (int u = 0; u <= unoccupied; u++){
+      grid[x + u][y].walkable = true;
+    }
+  }
+     
+        
+
+}
+
+void reset_path(){
+  for(int i = 0; i <20; i++){
+    for(int j = 0; j <20; j++){  
+     grid[i][j].in_path = false;
+      }
+    }
+}
+void reset_lists(){
+  open.clear();
+  closed.clear();
+}
