@@ -1,3 +1,5 @@
+//look at pathfinding in the repo for comments and explanation for a* algo. Here is where i explain obstacle tracking
+
 #include <StandardCplusplus.h>
 #include <system_configuration.h>
 #include <unwind-cxx.h>
@@ -294,13 +296,14 @@ void update_grid(int x, int y, int target_x,int target_y){
 
 }
 
-void reset_path(){
+void reset_path() {
   for(int i = 0; i <20; i++){
     for(int j = 0; j <20; j++){  
      grid[i][j].in_path = false;
       }
     }
 }
+
 void reset_lists(){
   open.clear();
   closed.clear();
