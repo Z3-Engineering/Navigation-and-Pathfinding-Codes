@@ -23,13 +23,13 @@ void loop(){
    float thetaRad = 180/pi*thetaDeg;
    int encoder0Pos = 0;
    
-   while (thetaRad >= 2*pi){ //puts angle in correct range
-  thetaRad = thetaRad - 2*pi;
+  while (thetaRad >= 2*pi){ //puts angle in correct range
+    thetaRad = thetaRad - 2*pi;
   }
   while (thetaRad <= -2*pi){ //puts angle in correct range
     thetaRad = thetaRad + 2*pi;
     }
-   if (thetaRad > 0 && thetaRad <=pi){ //Readjust angle based on if rotating clockwise or counterclockwise is shorter.
+  if (thetaRad > 0 && thetaRad <=pi){ //Readjust angle based on if rotating clockwise or counterclockwise is shorter.
     //motospd(30,30,30);
   }
   else if (thetaRad <= -pi && thetaRad >2*pi){
@@ -50,20 +50,20 @@ void loop(){
   }
    int targetPos = (int) (pi/100)*robotRadius*thetaRad/wheelRadius; //Testing shows ~100 pulses per 180deg of rotation.
    while (encoder0Pos < targetPos){
-   n = digitalRead(encoder0PinA);
-   if ((encoder0PinALast == LOW) && (n == HIGH)) {
-     if (digitalRead(encoder0PinB) == LOW) {
-       encoder0Pos--;
-     } else {
-       encoder0Pos++;
-     }
-     Serial.print ("Target Position: ");
-     Serial.println (targetPos);
-     Serial.print ("Current Position: ");
-     Serial.println (encoder0Pos);
+     n = digitalRead(encoder0PinA);
+     if ((encoder0PinALast == LOW) && (n == HIGH)) {
+       if (digitalRead(encoder0PinB) == LOW) {
+         encoder0Pos--;
+       } else {
+         encoder0Pos++;
+       }
+       Serial.print ("Target Position: ");
+       Serial.println (targetPos);
+       Serial.print ("Current Position: ");
+       Serial.println (encoder0Pos);
        
-   } 
-   }
-   //motospd(0,0,0); //Stop the Robot
-   encoder0PinALast = n;
+      } 
+      }
+      //motospd(0,0,0); //Stop the Robot
+      encoder0PinALast = n;
  } 
