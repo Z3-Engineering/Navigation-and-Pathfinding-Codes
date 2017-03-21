@@ -65,15 +65,15 @@ void loop(){
     motospd(50,50,50);
     Serial.println("Start the Robot");
   }
-  else if (thetaRad <= -pi && thetaRad >2*pi){
-    thetaRad = pi + thetaRad;
+  else if (thetaRad <= -pi && thetaRad >-2*pi){
+    thetaRad = 2*pi - thetaRad;
     motospd(50,50,50);
   }
   else if(thetaRad > pi && thetaRad < 2*pi){
     thetaRad = 2*pi-thetaRad; 
     motospd(-50,-50,-50);
   }
-  else if (thetaRad < 0 && thetaRad > -2*pi){
+  else if (thetaRad < 0 && thetaRad > -1*pi){
     thetaRad = -1*thetaRad;
     motospd(-50,-50,-50);
   }
