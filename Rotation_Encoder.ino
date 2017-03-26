@@ -31,7 +31,8 @@ const int motor_relay=8;
   digitalWrite(motor_relay,HIGH);
     
   Serial3.begin(1550);    // begin serial to BASE ARDUINO
-
+  Serial.println("CLEARDATA");
+  Serial.println("LABEL,Time,Motospd,RPM");
 
  } 
 
@@ -124,4 +125,46 @@ void loop(){
   analogWrite(wheel_pwm[0],abs(sp1));
   analogWrite(wheel_pwm[1],abs(sp2));
  analogWrite(wheel_pwm[2],abs(sp3));
+}
+
+void RPM_Test(){
+float RPM[8];
+//Serial.println("The Test Begins, Now-ow-ow-ow-ow-ow-ow");
+
+  for (int i=0; i <= 7; i++){
+  int encoder0Pos = 0;
+  motospd(10*(i+3),10*(i+3),10*(i+3));
+  float time0 = millis();
+  while(abs(encoder0Pos) < .5212*1800)
+   {
+     n = digitalRead(encoder0PinA);
+     if ((encoder0PinALast == LOW) && (n == HIGH)) {
+       if (digitalRead(encoder0PinB) == LOW) {
+         encoder0Pos--;
+       } else {
+         encoder0Pos++;
+       }
+  
+//       Serial.print (encoder0Pos);
+//       Serial.print ("/");
+     } 
+     encoder0PinALast = n;
+   }
+  float dTime = (millis() - time0)/60000;
+  
+  RPM[i] = 1/dTime; 
+   
+
+  Serial.print("DATA,TIME,");
+  Serial.print(10*(i+3));
+  Serial.print(",");
+  Serial.println(RPM[i]);
+//  Serial.println("-------------------------------");
+//  Serial.print("Time"); Serial.println(dTime);
+//  Serial.print("Motospd");Serial.println(10*(i+2));
+//  Serial.print("RPM:"); Serial.println(RPM[i]);
+  }
+//  Serial.println("The Test is Over.");
+
+
 }
