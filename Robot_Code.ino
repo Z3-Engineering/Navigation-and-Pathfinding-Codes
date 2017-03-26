@@ -33,9 +33,9 @@ struct node
     struct node* parent;
   };
 vector<struct node *> path;
+bool HasGridBeenUpdated;
 
-
-int boxLocation[2] = {0,0}; //Location of the robot in the room, represented as grid, with origin and back left corner. 
+int boxLocation[2] = {9,9}; //Location of the robot in the room, represented as grid, with origin and back left corner. 
 
 int wheel_pwm[] = {6,7,5}; //pins on motor drive to control speed
 int wheel_direction[] = {3,4,2}; //pins to control wheel direction
@@ -134,17 +134,58 @@ void loop() {
 //translateCart(0,1);
 
 //velocity_calib();
-//Serial.println(velocity);
 
-reset_path(); //first you reset path
-reset_lists(); //then reset list
-update_grid(boxLocation[0],boxLocation[1],18,0); //then update grid for obstacles 
- FindPath(boxLocation[0],boxLocation[1],18,0); // then find the path based on updated grid
-      show_Grid(); //then show the vidualized grid
-translateCart(path[path.size()-1]->posx,path[path.size()-1]->posy);
-delay(5000);
 
+  reset_path(); //first you reset path
+  reset_lists(); //then reset list
+  update_grid(boxLocation[0],boxLocation[1]); //then update grid for obstacles 
+  if(path.size() > 0){
+  Serial.println("Next Path Location:");
+  Serial.println(path[path.size()-1]->posx);
+  Serial.println(path[path.size()-1]->posy);
+  }
+  FindPath(boxLocation[0],boxLocation[1],9,14); // then find the path based on updated grid
+  //show_Grid(); //then show the vidualized grid
+  if(path.size()>0){
+    translateCart(path[path.size()-1]->posx,path[path.size()-1]->posy);
+     boxLocation[0] = path[path.size()-1]->posx;
+     boxLocation[1]= path[path.size()-1]->posy;
+  }
+ 
+  //delay(5000);
+ 
 }
+
+//void Move_Along_Path(int targetx, int targety)
+//{
+//  reset_path(); //first you reset path
+//  reset_lists(); //then reset list
+//  update_grid(boxLocation[0],boxLocation[1]); //then update grid for obstacles 
+//  FindPath(boxLocation[0],boxLocation[1],targetx,targety);
+//  while(path.size()>0){
+//
+//    while(!hasgridbeenupdated){
+//      update_grid(boxLocation[0],boxLocation[1]); //then update grid for obstacles 
+//      if(hasgridbeenupdated){
+//        reset_path(); //first you reset path
+//        reset_lists(); //then reset list
+//        FindPath(boxLocation[0],boxLocation[1],targetx,targety);
+//      }
+//      translateCart(translateCart(path[path.size()-1]->posx,path[path.size()-1]->posy));
+//    }
+//  }
+////  if(path.size() > 0){
+////  Serial.println("Next Path Location:");
+////  Serial.println(path[path.size()-1]->posx);
+////  Serial.println(path[path.size()-1]->posy);
+////  }
+//
+//  if(path.size()>0){
+//    translateCart(path[path.size()-1]->posx,path[path.size()-1]->posy);
+//     boxLocation[0] = path[path.size()-1]->posx;
+//     boxLocation[1]= path[path.size()-1]->posy;
+//  }
+//}
 void Do_Thingy(){
   boolean aligned = false;
   Serial.print(Am_I_Close());
@@ -556,7 +597,7 @@ void IRProxInfoDisplay() {
   }
   delay(100);
 }
-float velocity = 24.6; //velocity in cm/s. !!!!!!.!!!!!NEED TO CALIBRATE!!!!!!!!!!!
+float velocity = 24.83; //velocity in cm/s. !!!!!!.!!!!!NEED TO CALIBRATE!!!!!!!!!!!
 time_t timerTime; //Time after Arduino is powered on that timing starts
 time_t timerReading; //Time since timing starts
 void velocity_calib(){
@@ -605,16 +646,19 @@ void translatePolar(float azimuth, float destDistCm){ //Robot moves a specified 
   Serial.print("The Robot Will Now Move for ");
   Serial.print(duration/1000);
   Serial.println("Seconds");
-  wheel_speeds(60,azimuth+360); //speed in "motospd units"
+  if(azimuth > 0)
+    wheel_speeds(60,360-azimuth); //speed in "motospd units"
+  else
+    wheel_speeds(60,abs(azimuth)); //speed in "motospd units"
   Serial.println(timerReading);
   while (timerReading < duration){
     boxUpdate(azimuth,timerReading,velocity);
     timerRead(); 
-    Serial.print("The Robot is in Box: ");
-    Serial.print(boxLocation[0]);
-    Serial.println(boxLocation[1]);
     delay(10);
   }
+      Serial.print("The Robot is in Box: ");
+    Serial.print(boxLocation[0]);
+    Serial.println(boxLocation[1]);
   Serial.println("The Robot has Stopped");
   motospd(0,0,0); //Stop the robot
 
@@ -638,8 +682,8 @@ void translateCart(int goalX, int goalY){ //Determines the distance and directio
   Serial.println("The crystal Gem is:");
   Serial.println(((azimuth*180)/PI)-90);
   translatePolar(((azimuth*180)/PI)-90, destDistCm); //Once the robot determines the distance and 
-  boxLocation[0] = goalX;
-  boxLocation[1]= goalY;
+//  boxLocation[0] = goalX;
+//  boxLocation[1]= goalY;
 }
 
 void rotate(float deg){ //input the angle you want to face, relative to the direction the robot is currently facing. 
@@ -820,6 +864,7 @@ void RetracePath(struct node *startNode, struct node *endNode){
     Serial.print(", ");
      Serial.print(currentNode->posy);
       Serial.println("]");
+      
 
     if (!currentNode) {
       // THERE'S NO PATH THO.
@@ -827,7 +872,9 @@ void RetracePath(struct node *startNode, struct node *endNode){
 
 
     }
+    
   }
+  show_Grid();
 }
 void GetNeighbours(struct node *current){
   neighbours.clear();
@@ -855,15 +902,16 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
   //cout << open[0]->posy << "\n";
 
  
-
+Serial.println(open.size());
   while(open.size() > 0 ){
     //cout << "[2]" << "\n";
      
     struct node *currentNode = open[0];
     int index = 0;
 
+   
     for (int i =1; i<open.size(); i++){
-      Serial.println("HIIHIHIHIHIHI");
+     // Serial.println("HIIHIHIHIHIHI");
       if(fcost(open[i]) < fcost(currentNode) || fcost(open[i]) == fcost(currentNode) && open[i]->hcost < currentNode->hcost){
         currentNode = open[i];
         index = i;
@@ -874,6 +922,7 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
     open.erase(open.begin() + index);
     closed.push_back(currentNode);
    // printnode(currentNode);
+  
     if(currentNode == targetNode){
       RetracePath(startNode, targetNode);
       return;
@@ -902,22 +951,23 @@ void FindPath (int start_x, int start_y, int target_x, int target_y){
 // this is where obstacle detection and avoidance starts
 
 //dtermines if the locations detected by sonar are occupied or not
-void update_grid(int x, int y, int target_x,int target_y){
+void update_grid(int x, int y){
   updateSonar();
   //distance of object detected
   float sonarleft = cm[0];
 
 //adjust 150 to what you want, 150cm is what i consider accurate
   if(sonarleft <= 150 && sonarleft != 0){
-    int unoccupied = sonarleft/25;
+    int unoccupied = sonarleft/50;
     //adjust 25 to what you want. i wanted each box in the grid to be 25x25cm. I will increase this to match the demensions of the robot
     
     //this is to remove obsticales that were there before, but were removed. marks true if no obstacle
     for (int u = 0; u <= unoccupied; u++){
-      grid[x + u][y].walkable = true;
+      grid[x][y + u].walkable = true;
     }
     
-    grid[x + unoccupied + 1][y].walkable = false;
+    grid[x][y + unoccupied+1].walkable = false;
+//    hasgridbeenupdated = true;
 
   }
   //if there is no obsticale, mark the boxes as unoccupied.....so since 150cm is our range, range/nodesize = # of nodes 
@@ -945,6 +995,3 @@ void reset_lists(){
   open.clear();
   closed.clear();
 }
-
-
-
