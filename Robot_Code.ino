@@ -67,16 +67,18 @@ double max_speedR = 40; //rotate speed
 //create a new instance of Pixy
 Pixy pixy;
 
-double cm[2]; //sensed distance of sonar sensor : 2 represents array(2 sonar sensors)
-int trigger[2] = {32,34}; //trigger pins assignment  (sends)
-int echo[2] = {33,35}; //echo pins (receives)
+double cm[4]; //sensed distance of sonar sensor : 2 represents array(2 sonar sensors)
+int trigger[4] = {31,33,35,37}; //trigger pins assignment  (sends)
+int echo[4] = {30,32,34,36}; //echo pins (receives)
 
 //set up the sonar sensors for NewPing Library
-NewPing sonar[2] =
+NewPing sonar[4] =
 {
   NewPing(trigger[0], echo[0], 500), //500 represents type of sensors
   NewPing(trigger[1], echo[1], 500), //500 represents type of sensor
-
+  NewPing(trigger[2], echo[2], 500), //500 represents type of sensors
+  NewPing(trigger[3], echo[3], 500), //500 represents type of sensor
+  
 };
 
 int IR_proximity_pins[] = {A0, A1, A2, A3}; // pins for the proximity detection
