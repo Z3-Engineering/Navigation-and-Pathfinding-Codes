@@ -90,9 +90,10 @@ float omega1, omega2, omega3; //individual wheel speeds // rad/s
 float omegas[3];
 float R = 0.0508; // radius of wheel // m
 float l=8.5*2.54*.01; //lever arm for each wheel
-int trigger[6] = {30, 32, 46, 36, 38, 40}; //trigger pins assignment  (sends)   
-int echo[6] = {31, 33, 47, 37, 39, 41}; //echo pins (receives)C
+int trigger[6] = {31, 32, 46, 36, 38, 40}; //trigger pins assignment  (sends)   
+int echo[6] = {30, 33, 47, 37, 39, 41}; //echo pins (receives)C
 const int motor_relay = 8; 
+int rotationdelay;
 NewPing sonar[6] =
 {
   NewPing(trigger[0], echo[0], 500), //500 represents type of sensor
@@ -142,7 +143,9 @@ void setup() {
   myPID.SetMode(AUTOMATIC);
   myPID.SetOutputLimits(0, 15);
   pixy.getBlocks(17);
-  speed_up(60,0,1);
+  speed_up(60,0,0);
+  wallCount(); 
+  rotate(0,true);
   wallCount(); 
 
 }
@@ -159,6 +162,8 @@ void loop() {
 //PID_Superposition(60,0,0,1);
 //updateSonar();
 //sonarInfoDisplay();
+//rotate(1,true);
+//delay(1000);
 
 }
 
@@ -195,7 +200,7 @@ void unimatMoveSensedForward(float Vx, float Vy, float omega, int roboID) {
   //  Serial.print("\n omega2:  ");Serial.print(omega2);
   //  omega3 = R * ( 1.544*Vx   + 1.544*Vy  +  1.544*omega);
   //  Serial.print("\n omega3:  ");Serial.print(omega3);
-  omega1 = .01952 * (1 * Vx  + 0 * Vy +  l * omega);
+  omega1 = .02 * (1 * Vx  + 0 * Vy +  l * omega);//.01925 for robo1
  // Serial.print("\n omega1:  "); Serial.print(omega1);
   omega2 = 0.022 * ( -0.50 * Vx       + 3.464 * Vy  + l * omega);
  // Serial.print("\n omega2:  "); Serial.print(omega2);
@@ -230,13 +235,26 @@ void speed_up(float vx, float vy,int robo){
   }
 }
 
+void rotate(int roboID, bool clockwise){
+  if(clockwise)
+    unimatMoveSensedForward(0,0,-200,roboID);
+  else
+    unimatMoveSensedForward(0,0,200,roboID);
+
+  delay(rotationdelay);
+  motospd(0,0,0);
+}
 
 float calibrator(float omega, int roboID) { //calibration function for aggregated frictional effects on robots 
     switch (roboID) {
         case 0:
+            rotationdelay = 1200;
             return 59.918 * omega; //robot 0
+
         case 1:
+            rotationdelay = 2500;
             return 63.41 * omega; //robot 1
+            
         case 2:
             // Serial.print(omega);
             return 61.236 * omega; //robot 2
@@ -414,31 +432,42 @@ void wallCount(){ //counts walls by moving along the wall and waiting for the ce
   while(true){
     PID_Superposition(60,0,0,1);
     blocks = pixy.getBlocks();
-      if ((pixy.blocks[0].signature== 19 || pixy.blocks[0].signature== 12 ||pixy.blocks[0].signature== 10 || pixy.blocks[0].signature== 11) && (pixy.blocks[0].x > (160+tolerance)))
+      if ((pixy.blocks[0].signature== 19 || pixy.blocks[0].signature== 12 ||pixy.blocks[0].signature== 10 || pixy.blocks[0].signature== 11 || pixy.blocks[0].signature== 28 ||(toOctalFromDecimal(pixy.blocks[0].signature)%10 == 5)) && (pixy.blocks[0].x > (160+tolerance)))
       {
 
+      
         bool cnt = align_to_zero();
         if(cnt)
           wallCounter+=1;
-          motospd(0,0,0);
-          delay(500);
+//          motospd(0,0,0);  //makes robot stop after aligning to every block
+//          delay(500);
+          cout<<"\nThe Count is now: "<<wallCounter<<endl;
           observedWall=pixy.blocks[0].signature;
           Serial.print("Observed wall is: ");
          Serial.println(observedWall);
+         if(toOctalFromDecimal(pixy.blocks[0].signature)%10 == 5){
+          motospd(0,0,0);
+          endCorner=pixy.blocks[0].signature;
+          cout<<"\nFound end of wall with signature "<<endCorner<<" as block "<<0<<endl;
+          cout<<"\nI found "<<wallCounter<<" coordinates along the wall with signature "<<observedWall<<endl;
+          dimensions[whichWall(observedWall)]=wallCounter; 
+          cout<<"\nThe Dimenstion is: " <<dimensions[0]<<", "<<dimensions[2]<<endl;
+          return;
+         }
       }
-      else if ((toOctalFromDecimal(pixy.blocks[0].signature)%10 == 5) && (pixy.blocks[0].x > (160+tolerance)))
-      {
-        motospd(0,0,0);
-        endCorner=pixy.blocks[0].signature;
-        cout<<"\nFound end of wall with signature "<<endCorner<<" as block "<<0<<endl;
-        cout<<"\nI found "<<wallCounter<<" coordinates along the wall with signature "<<observedWall<<endl;
-        dimensions[whichWall(observedWall)]=wallCounter; 
-
-        cout<<"\nThe Dimenstion is: " <<dimensions[0]<<", "<<dimensions[2]<<endl;
-     
-        
-        return;
-      }
+//      else if ((toOctalFromDecimal(pixy.blocks[0].signature)%10 == 5) && (pixy.blocks[0].x > (160+tolerance)))
+//      {
+//        motospd(0,0,0);
+//        endCorner=pixy.blocks[0].signature;
+//        cout<<"\nFound end of wall with signature "<<endCorner<<" as block "<<0<<endl;
+//        cout<<"\nI found "<<wallCounter<<" coordinates along the wall with signature "<<observedWall<<endl;
+//        dimensions[whichWall(observedWall)]=wallCounter; 
+//
+//        cout<<"\nThe Dimenstion is: " <<dimensions[0]<<", "<<dimensions[2]<<endl;
+//     
+//        
+//        return;
+//      }
     if (blocks == 0){
         Serial.println("Moving right until i can see some blocks");
 //        delay(10);
