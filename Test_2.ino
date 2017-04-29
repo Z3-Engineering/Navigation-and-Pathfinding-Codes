@@ -90,8 +90,8 @@ float omega1, omega2, omega3; //individual wheel speeds // rad/s
 float omegas[3];
 float R = 0.0508; // radius of wheel // m
 float l=8.5*2.54*.01; //lever arm for each wheel
-int trigger[6] = {31, 32, 46, 36, 38, 40}; //trigger pins assignment  (sends)   
-int echo[6] = {30, 33, 47, 37, 39, 41}; //echo pins (receives)C
+int trigger[6] = {30, 32, 46, 36, 38, 40}; //trigger pins assignment  (sends)   
+int echo[6] = {31, 33, 47, 37, 39, 41}; //echo pins (receives)C
 const int motor_relay = 8; 
 int rotationdelay;
 NewPing sonar[6] =
