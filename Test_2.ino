@@ -114,8 +114,9 @@ NewPing sonar[6] =
 double Setpoint, Input, Output;
 
 //Define the aggressive and conservative Tuning Parameters
-double aggKp = .5, aggKi = .06125, aggKd = .02;
-double consKp = 1.75, consKi = .03, consKd = .01;//Robot 1 consKp = .4, consKi = .030625, consKd = .02
+int robotID = 2; 
+double aggTuning[9] = {.5, .5, 2, .06125, .06125, .06125, .02, .02, .02}; //Robot 00 Kp, Robot 01 Kp, Robot 02 Kp, Robot 00 Ki, etc. 
+double consTuning[9] = {.5, .4, .5, .06125, .030625, .06125, .02, .01, .02};
 
 float root3 = 1.7321;
 PID myPID(&Input, &Output, &Setpoint, consKp, consKi, consKd, DIRECT);
