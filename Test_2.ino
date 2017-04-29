@@ -256,7 +256,7 @@ float calibrator(float omega, int roboID) { //calibration function for aggregate
             return 63.41 * omega; //robot 1
             
         case 2:
-            // Serial.print(omega);
+            rotationdelay = 1500; 
             return 61.236 * omega; //robot 2
     }
 }
