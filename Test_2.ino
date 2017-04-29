@@ -476,6 +476,23 @@ void wallCount(){ //counts walls by moving along the wall and waiting for the ce
     
 }
 
+void takeCorner(int roboID){
+  Serial.println("Cornering");
+  rotate(roboID,1);
+  while(true){
+    PID_Superposition(60,0,0,1);
+    blocks = pixy.getBlocks();
+    if (toOctalFromDecimal(pixy.blocks[0].signature)%10 == 5){
+      PID_Superposition(60,0,0,1);
+    }
+    else{
+      motospd(0,0,0);
+      Serial.print("Block 0 is not the Corner Color");
+    }
+     
+}
+}
+
 void pixyCheck(){ //checks if corner colour (usually run whenever approacing a corner to make sure pixy is facing that corner
   int i=0;
   while (i<4){
